@@ -45,6 +45,7 @@
 //for creating a local cost grid
 #include <base_local_planner/map_cell.h>
 #include <base_local_planner/map_grid.h>
+#include <base_local_planner/map_grid_visualizer.h>
 
 //for obstacle data access
 #include <costmap_2d/costmap_2d.h>
@@ -297,6 +298,7 @@ namespace base_local_planner {
       double stop_time_buffer_; ///< @brief How long before hitting something we're going to enforce that the robot stop
       double sim_period_; ///< @brief The number of seconds to use to compute max/min vels for dwa
 
+      MapGridVisualizer map_viz_;
       /**
        * @brief  Compute x position based on velocity
        * @param  xi The current x position
