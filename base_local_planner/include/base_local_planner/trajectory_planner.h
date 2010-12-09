@@ -171,6 +171,7 @@ namespace base_local_planner {
       bool checkTrajectory(double x, double y, double theta, double vx, double vy, 
           double vtheta, double vx_samp, double vy_samp, double vtheta_samp);
 
+      bool getCostValue(int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost);
     private:
       /**
        * @brief  Create the trajectories we wish to explore, score them, and return the best option
@@ -299,6 +300,7 @@ namespace base_local_planner {
       double sim_period_; ///< @brief The number of seconds to use to compute max/min vels for dwa
 
       MapGridVisualizer map_viz_;
+
       /**
        * @brief  Compute x position based on velocity
        * @param  xi The current x position

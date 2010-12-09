@@ -41,23 +41,22 @@
 #include <pcl_ros/publisher.h>
 
 namespace base_local_planner {
-        class MapGridVisualizer {
-                public:
-                    MapGridVisualizer(const std::string& name,const costmap_2d::Costmap2D * costmap, const MapGrid *grid);
-                    ~MapGridVisualizer() {}
-                    void publishCostCloud();
+    class MapGridVisualizer {
+        public:
+            MapGridVisualizer(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function);
+            ~MapGridVisualizer() {}
+            void publishCostCloud();
 
-                private:
-                    std::string name_;
-                    std::string frame_id_;
-                    bool publish_cost_grid_pc_;
-                    const costmap_2d::Costmap2D *costmap_p_;
-                    const MapGrid *grid_p_;
-                    ros::NodeHandle ns_nh_;
-                    pcl::PointCloud<MapGridCostPoint> cost_cloud_;
-                    pcl_ros::Publisher<MapGridCostPoint> pub_;
-                    double pdist_gain_, gdist_gain_, ocost_gain_;
-        };
+        private:
+            std::string name_;
+            std::string frame_id_;
+            boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function_;
+            bool publish_cost_grid_pc_;
+            const costmap_2d::Costmap2D *costmap_p_;
+            ros::NodeHandle ns_nh_;
+            pcl::PointCloud<MapGridCostPoint> cost_cloud_;
+            pcl_ros::Publisher<MapGridCostPoint> pub_;
+    };
 };
 
 #endif

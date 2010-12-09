@@ -71,7 +71,7 @@ namespace base_local_planner{
     max_vel_th_(max_vel_th), min_vel_th_(min_vel_th), min_in_place_vel_th_(min_in_place_vel_th),
     backup_vel_(backup_vel),
     dwa_(dwa), heading_scoring_(heading_scoring), heading_scoring_timestep_(heading_scoring_timestep),
-    simple_attractor_(simple_attractor), y_vels_(y_vels), stop_time_buffer_(stop_time_buffer), sim_period_(sim_period), map_viz_("TrajectoryPlannerROS", &costmap_, &map_)
+    simple_attractor_(simple_attractor), y_vels_(y_vels), stop_time_buffer_(stop_time_buffer), sim_period_(sim_period), map_viz_("TrajectoryPlannerROS", &costmap_, boost::bind(&TrajectoryPlanner::getCostValue, this, _1, _2, _3, _4, _5, _6))
   {
     //the robot is not stuck to begin with
     stuck_left = false;
@@ -88,6 +88,21 @@ namespace base_local_planner{
   }
 
   TrajectoryPlanner::~TrajectoryPlanner(){}
+
+  bool TrajectoryPlanner::getCostValue(int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost) {
+    MapCell cell = map_(cx, cy);
+    if (cell.within_robot) {
+        return false;
+    }
+    occ_cost = costmap_.getCost(cx, cy);
+    if (cell.path_dist >= map_.map_.size() || cell.goal_dist >= map_.map_.size() || occ_cost >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE) {
+        return false;
+    }
+    path_cost = cell.path_dist;
+    goal_cost = cell.goal_dist;
+    total_cost = pdist_scale_ * path_cost + gdist_scale_ * goal_cost + occdist_scale_ * occ_cost;
+    return true;
+  }
 
   //create and score a trajectory given the current pose of the robot and selected velocities
   void TrajectoryPlanner::generateTrajectory(double x, double y, double theta, double vx, double vy, 

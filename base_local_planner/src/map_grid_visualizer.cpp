@@ -36,15 +36,12 @@
 #include <vector>
 
 namespace base_local_planner {
-  MapGridVisualizer::MapGridVisualizer(const std::string &name, const costmap_2d::Costmap2D * costmap, const MapGrid *grid) {
+  MapGridVisualizer::MapGridVisualizer(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function) {
     name_ = name;
     costmap_p_ = costmap;
-    grid_p_ = grid;
+    cost_function_ = cost_function;
 
     ns_nh_ = ros::NodeHandle("~/" + name_);
-    ns_nh_.param("path_distance_bias", pdist_gain_, 0.6);
-    ns_nh_.param("goal_distance_bias", gdist_gain_, 0.8);
-    ns_nh_.param("occdist_scale", ocost_gain_, 0.01);
     ns_nh_.param("publish_cost_grid_pc", publish_cost_grid_pc_, false);
     ns_nh_.param("global_frame_id", frame_id_, std::string("odom"));
 
@@ -54,32 +51,28 @@ namespace base_local_planner {
 
   void MapGridVisualizer::publishCostCloud() {
     if(publish_cost_grid_pc_) {
-      std::vector<MapCell> map_cells = grid_p_->map_;
+      unsigned int x_size = costmap_p_->getSizeInCellsX();
+      unsigned int y_size = costmap_p_->getSizeInCellsY();
       double z_coord = 0.0;
       double x_coord, y_coord;
-      std::vector<MapCell>::const_iterator it;
       MapGridCostPoint pt;
       cost_cloud_.points.clear();
       cost_cloud_.header.stamp = ros::Time::now();
-      unsigned char occ_cost;
-      for (it = map_cells.begin(); it < map_cells.end(); it++) {
-        if(it->within_robot) {
-          continue;
+      float path_cost, goal_cost, occ_cost, total_cost;
+      for (unsigned int cx = 0; cx < x_size; cx++) {
+        for(unsigned int cy = 0; cy < y_size; cy++) {
+          costmap_p_->mapToWorld(cx, cy, x_coord, y_coord);
+          if(cost_function_(cx, cy, path_cost, goal_cost, occ_cost, total_cost)) {
+            pt.x = x_coord;
+            pt.y = y_coord;
+            pt.z = z_coord;
+            pt.path_cost = path_cost;
+            pt.goal_cost = goal_cost;
+            pt.occ_cost = occ_cost;
+            pt.total_cost = total_cost;
+            cost_cloud_.push_back(pt);
+          }
         }
-        occ_cost = costmap_p_->getCost(it->cx, it->cy);
-        if(it->path_dist >= map_cells.size() || it->goal_dist >= map_cells.size() || occ_cost >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE) {
-          continue;
-        }
-        costmap_p_->mapToWorld(it->cx, it->cy, x_coord, y_coord);
-        pt.x = x_coord;
-        pt.y = y_coord;
-        pt.z = z_coord;
-        pt.path_cost = it->path_dist;
-        pt.goal_cost = it->goal_dist;
-        pt.occ_cost = occ_cost;
-        double total_cost = it->path_dist * pdist_gain_ + it->goal_dist * gdist_gain_ + occ_cost * ocost_gain_;
-        pt.total_cost = total_cost;
-        cost_cloud_.push_back(pt);
       }
       pub_.publish(cost_cloud_);
     }
