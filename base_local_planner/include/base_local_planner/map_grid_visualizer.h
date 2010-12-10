@@ -43,7 +43,8 @@
 namespace base_local_planner {
     class MapGridVisualizer {
         public:
-            MapGridVisualizer(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function);
+            MapGridVisualizer();
+            void initialize(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function);
             ~MapGridVisualizer() {}
             void publishCostCloud();
 

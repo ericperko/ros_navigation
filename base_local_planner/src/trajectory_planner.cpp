@@ -71,7 +71,7 @@ namespace base_local_planner{
     max_vel_th_(max_vel_th), min_vel_th_(min_vel_th), min_in_place_vel_th_(min_in_place_vel_th),
     backup_vel_(backup_vel),
     dwa_(dwa), heading_scoring_(heading_scoring), heading_scoring_timestep_(heading_scoring_timestep),
-    simple_attractor_(simple_attractor), y_vels_(y_vels), stop_time_buffer_(stop_time_buffer), sim_period_(sim_period), map_viz_("TrajectoryPlannerROS", &costmap_, boost::bind(&TrajectoryPlanner::getCostValue, this, _1, _2, _3, _4, _5, _6))
+    simple_attractor_(simple_attractor), y_vels_(y_vels), stop_time_buffer_(stop_time_buffer), sim_period_(sim_period)
   {
     //the robot is not stuck to begin with
     stuck_left = false;
@@ -89,7 +89,7 @@ namespace base_local_planner{
 
   TrajectoryPlanner::~TrajectoryPlanner(){}
 
-  bool TrajectoryPlanner::getCostValue(int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost) {
+  bool TrajectoryPlanner::getCellCosts(int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost) {
     MapCell cell = map_(cx, cy);
     if (cell.within_robot) {
         return false;
@@ -384,8 +384,6 @@ namespace base_local_planner{
       //make sure that we update our path based on the global plan and compute costs
       map_.setPathCells(costmap_, global_plan_);
       ROS_DEBUG("Path/Goal distance computed");
-      map_viz_.publishCostCloud();
-      ROS_DEBUG("Cost PointCloud published");
     }
   }
 
@@ -805,8 +803,6 @@ namespace base_local_planner{
     //make sure that we update our path based on the global plan and compute costs
     map_.setPathCells(costmap_, global_plan_);
     ROS_DEBUG("Path/Goal distance computed");
-    map_viz_.publishCostCloud();
-    ROS_DEBUG("Cost PointCloud published");
 
     //rollout trajectories and find the minimum cost one
     Trajectory best = createTrajectories(x, y, theta, 

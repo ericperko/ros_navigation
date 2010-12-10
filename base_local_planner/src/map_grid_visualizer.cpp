@@ -36,7 +36,10 @@
 #include <vector>
 
 namespace base_local_planner {
-  MapGridVisualizer::MapGridVisualizer(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function) {
+  MapGridVisualizer::MapGridVisualizer() {}
+
+
+  void MapGridVisualizer::initialize(const std::string& name,const costmap_2d::Costmap2D * costmap, boost::function<bool (int cx, int cy, float &path_cost, float &goal_cost, float &occ_cost, float &total_cost)> cost_function) {
     name_ = name;
     costmap_p_ = costmap;
     cost_function_ = cost_function;
@@ -75,6 +78,7 @@ namespace base_local_planner {
         }
       }
       pub_.publish(cost_cloud_);
+      ROS_DEBUG("Cost PointCloud published");
     }
   }
 };
